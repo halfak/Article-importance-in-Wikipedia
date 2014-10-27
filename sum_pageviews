@@ -1,0 +1,2 @@
+#!/bin/sh
+python3 -tt -c "from importance import sum_pageviews; sum_pageviews.main();" "$@"

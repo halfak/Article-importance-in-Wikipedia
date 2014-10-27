@@ -8,6 +8,8 @@ __pycache__/
 *.table
 *.created
 *.loaded
+*.gz
+*.bz2
 
 # C extensions
 *.so
