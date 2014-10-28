@@ -142,3 +142,9 @@ datasets/tables/resolved_view_count.loaded: \
 	mysql $(dbstore) staging \
 		-e "SELECT NOW(), COUNT(*) FROM resolved_view_count" > \
 	datasets/tables/resolved_view_count.loaded
+
+######################## Article stats #########################################
+datasets/article_stats.tsv: sql/article_stats.sql
+	cat sql/article_stats.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/article_stats.tsv
