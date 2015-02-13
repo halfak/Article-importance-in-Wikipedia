@@ -62,7 +62,7 @@ datasets/tables/resolved_inlink_count.created: \
 
 datasets/tables/resolved_inlink_count.loaded: \
 		datasets/tables/resolved_inlink_count.created \
-	datasets/resolved_inlink_count.tsv
+		datasets/resolved_inlink_count.tsv
 	mysql $(dbstore) staging \
 		-e "TRUNCATE resolved_inlink_count" && \
 	mysqlimport $(dbstore) --local staging --ignore-lines=1 \
@@ -70,6 +70,59 @@ datasets/tables/resolved_inlink_count.loaded: \
 	mysql $(dbstore) staging \
 		-e "SELECT NOW(), COUNT(*) FROM resolved_inlink_count" > \
 	datasets/tables/resolved_inlink_count.loaded
+
+datasets/organic_link.tsv: importance/extract_organic_links.py
+	./extract_organic_links \
+		--api=https://en.wikipedia.org/w/api.php \
+		--threads=35 \
+/mnt/data/xmldatadumps/public/enwiki/20141106/enwiki-20141106-pages-articles*.xml-*.bz2 > \
+	datasets/organic_link.tsv
+
+datasets/tables/organic_link.created: datasets/organic_link.tsv \
+		sql/tables/organic_link.create.sql
+		cat sql/tables/organic_link.create.sql | \
+		mysql $(dbstore) enwiki > \
+		datasets/tables/organic_link.created
+
+datasets/tables/organic_link.loaded: \
+		datasets/tables/organic_link.created \
+		datasets/organic_link.tsv
+	mysql $(dbstore) staging \
+		-e "TRUNCATE organic_link" && \
+	mysqlimport $(dbstore) --local staging --ignore-lines=1 \
+		datasets/organic_link.tsv && \
+	mysql $(dbstore) staging \
+		-e "SELECT NOW(), COUNT(*) FROM organic_link" > \
+	datasets/tables/organic_link.loaded
+
+datasets/tables/organic_inlink_count.loaded: datasets/tables/organic_link.loaded
+	cat sql/tables/organic_inlink_count.create_load.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/tables/organic_inlink_count.loaded
+
+datasets/resolved_organic_inlink_count.tsv:\
+		datasets/tables/organic_inlink_count.loaded \
+		sql/resolved_organic_inlink_count.sql
+	cat sql/resolved_organic_inlink_count.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/resolved_organic_inlink_count.tsv
+	
+datasets/tables/resolved_organic_inlink_count.created: \
+		sql/tables/resolved_organic_inlink_count.create.sql
+	cat sql/tables/resolved_organic_inlink_count.create.sql | \
+	mysql $(dbstore) enwiki > \
+	datasets/tables/resolved_organic_inlink_count.created
+
+datasets/tables/resolved_organic_inlink_count.loaded: \
+		datasets/tables/resolved_organic_inlink_count.created \
+		datasets/resolved_organic_inlink_count.tsv
+	mysql $(dbstore) staging \
+		-e "TRUNCATE resolved_organic_inlink_count" && \
+	mysqlimport $(dbstore) --local staging --ignore-lines=1 \
+		datasets/resolved_organic_inlink_count.tsv && \
+	mysql $(dbstore) staging \
+		-e "SELECT NOW(), COUNT(*) FROM resolved_organic_inlink_count" > \
+	datasets/tables/resolved_organic_inlink_count.loaded
 
 ######################### Quality classification ###############################
 datasets/quality_classification.tsv: sql/quality_classification.sql
@@ -148,3 +201,9 @@ datasets/article_stats.tsv: sql/article_stats.sql
 	cat sql/article_stats.sql | \
 	mysql $(dbstore) enwiki > \
 	datasets/article_stats.tsv
+	
+datasets/article_stats.sample.tsv: datasets/article_stats.tsv
+	(head -n1 datasets/article_stats.tsv; \
+	tail -n+2 datasets/article_stats.tsv | \
+	shuf -n 500000) > \
+	datasets/article_stats.sample.tsv

@@ -55,6 +55,8 @@ def sequence(*iterables, key=lambda i:i):
 HourViews = namedtuple("HourViews", ['project', 'page_name', 'views',
                                       'bytes_returned'])
 
+
+
 def open_hour_file(path, projects):
     
     with gzip.open(path, mode="rt", encoding="utf-8", errors="replace") as f:
@@ -64,6 +66,7 @@ def read_hour_file(f, projects):
     projects = set(projects)
     for line in f:
         project, page_name, views, bytes = line.strip().split(" ")
+        page_name = page_name.split("#")[0] # Remove anchors
         hourviews = HourViews(project, page_name, int(views),
                               int(bytes))
         

@@ -1,0 +1,2 @@
+#!/bin/sh
+python -c "from importance import extract_organic_links; extract_organic_links.main();" "$@"
